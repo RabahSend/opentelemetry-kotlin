@@ -12,8 +12,18 @@ internal class TracerProviderBehaviorTest {
     }
 
     @Test
+    fun consoleStartUnset() {
+        assertNull(TracerProviderBehavior().console)
+    }
+
+    @Test
     fun staysUnsetWhenNeitherLayerConfiguredSpanLimits() {
         assertNull(TracerProviderBehavior().mergeWith(TracerProviderBehavior()).spanLimits)
+    }
+
+    @Test
+    fun staysUnsetWhenNeitherLayerConfiguredConsole() {
+        assertNull(TracerProviderBehavior().mergeWith(TracerProviderBehavior()).console)
     }
 
     @Test
@@ -27,6 +37,20 @@ internal class TracerProviderBehaviorTest {
         assertEquals(
             limits,
             TracerProviderBehavior(spanLimits = limits).mergeWith(TracerProviderBehavior()).spanLimits,
+        )
+    }
+
+    @Test
+    fun adoptsConsoleFromWhicheverLayerSuppliedThem() {
+        val console = ConsoleExporterBehavior()
+
+        assertEquals(
+            console,
+            TracerProviderBehavior().mergeWith(TracerProviderBehavior(console = console)).console,
+        )
+        assertEquals(
+            console,
+            TracerProviderBehavior(console = console).mergeWith(TracerProviderBehavior()).console,
         )
     }
 

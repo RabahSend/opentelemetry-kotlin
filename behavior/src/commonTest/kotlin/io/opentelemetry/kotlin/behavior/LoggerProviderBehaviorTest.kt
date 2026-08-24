@@ -12,6 +12,11 @@ internal class LoggerProviderBehaviorTest {
     }
 
     @Test
+    fun consoleStartUnset() {
+        assertNull(LoggerProviderBehavior().console)
+    }
+
+    @Test
     fun mergesLogLimitsWhenBothLayersSuppliedThem() {
         val merged = LoggerProviderBehavior(
             logLimits = LogLimitsBehavior(attributeCountLimit = 1, attributeValueLengthLimit = 3),
@@ -21,5 +26,24 @@ internal class LoggerProviderBehaviorTest {
 
         assertEquals(1, merged.logLimits?.attributeCountLimit)
         assertEquals(99, merged.logLimits?.attributeValueLengthLimit)
+    }
+
+    @Test
+    fun staysUnsetWhenNeitherLayerConfiguredConsole() {
+        assertNull(LoggerProviderBehavior().mergeWith(LoggerProviderBehavior()).console)
+    }
+
+    @Test
+    fun adoptsConsoleFromWhicheverLayerSuppliedThem() {
+        val console = ConsoleExporterBehavior()
+
+        assertEquals(
+            console,
+            LoggerProviderBehavior().mergeWith(LoggerProviderBehavior(console = console)).console,
+        )
+        assertEquals(
+            console,
+            LoggerProviderBehavior(console = console).mergeWith(LoggerProviderBehavior()).console,
+        )
     }
 }
