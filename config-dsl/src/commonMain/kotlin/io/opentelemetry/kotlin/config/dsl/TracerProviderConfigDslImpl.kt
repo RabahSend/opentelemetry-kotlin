@@ -14,7 +14,8 @@ class TracerProviderConfigDslImpl : BehaviorSupplier<TracerProviderBehavior> {
 
     private var processor: SpanProcessorBehavior? = null
 
-    fun export(_action: TraceExportConfigDsl.() -> SpanProcessor) {
+    @Suppress("UnusedParameter")
+    fun export(action: TraceExportConfigDsl.() -> SpanProcessor) {
         processor = SpanProcessorBehavior()
     }
 

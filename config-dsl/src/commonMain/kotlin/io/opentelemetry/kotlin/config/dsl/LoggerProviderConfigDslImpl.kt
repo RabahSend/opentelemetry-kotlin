@@ -14,7 +14,8 @@ class LoggerProviderConfigDslImpl : BehaviorSupplier<LoggerProviderBehavior> {
 
     private var processor: LogRecordProcessorBehavior? = null
 
-    fun export(_action: LogExportConfigDsl.() -> LogRecordProcessor) {
+    @Suppress("UnusedParameter")
+    fun export(action: LogExportConfigDsl.() -> LogRecordProcessor) {
         processor = LogRecordProcessorBehavior()
     }
 
