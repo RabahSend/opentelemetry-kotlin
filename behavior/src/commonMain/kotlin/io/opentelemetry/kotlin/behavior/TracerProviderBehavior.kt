@@ -16,13 +16,13 @@ data class TracerProviderBehavior(
     val spanLimits: SpanLimitsBehavior? = null,
 
     /**
-     * Console span exporter. Selecting it is the whole configuration.
+     * Processor used by the tracer provider.
      */
-    val console: ConsoleExporterBehavior? = null,
+    val processor: SpanProcessorBehavior? = null,
 ) : Behavior<TracerProviderBehavior> {
 
     override fun mergeWith(higher: TracerProviderBehavior): TracerProviderBehavior = copy(
         spanLimits = mergeNode(spanLimits, higher.spanLimits),
-        console = mergeNode(console, higher.console),
+        processor = mergeNode(processor, higher.processor),
     )
 }
