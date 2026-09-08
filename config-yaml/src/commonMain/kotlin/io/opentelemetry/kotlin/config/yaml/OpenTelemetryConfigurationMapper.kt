@@ -15,10 +15,14 @@ fun OpenTelemetryConfiguration.toBehavior(): OpenTelemetryBehavior = OpenTelemet
     tracerProvider = tracerProvider?.let {
         TracerProviderBehavior(
             spanLimits = it.limits?.toBehavior(),
-            sampler = it.sampler?.toBehavior()
+            processor = it.processors.toBehavior(),
+            sampler = it.sampler?.toBehavior(),
         )
     },
     loggerProvider = loggerProvider?.let {
-        LoggerProviderBehavior(logLimits = it.limits?.toBehavior())
+        LoggerProviderBehavior(
+            logLimits = it.limits?.toBehavior(),
+            processor = it.processors.toBehavior(),
+        )
     },
 )

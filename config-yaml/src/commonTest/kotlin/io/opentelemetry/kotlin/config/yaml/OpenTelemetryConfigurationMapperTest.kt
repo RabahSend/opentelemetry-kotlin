@@ -1,20 +1,32 @@
 package io.opentelemetry.kotlin.config.yaml
 
 import io.opentelemetry.kotlin.behavior.AttributeLimitsBehavior
+import io.opentelemetry.kotlin.behavior.ConsoleExporterBehavior
 import io.opentelemetry.kotlin.behavior.LogLimitsBehavior
+import io.opentelemetry.kotlin.behavior.LogRecordProcessorBehavior
 import io.opentelemetry.kotlin.behavior.LoggerProviderBehavior
 import io.opentelemetry.kotlin.behavior.OpenTelemetryBehavior
 import io.opentelemetry.kotlin.behavior.SamplerBehavior
 import io.opentelemetry.kotlin.behavior.SpanLimitsBehavior
+import io.opentelemetry.kotlin.behavior.SpanProcessorBehavior
 import io.opentelemetry.kotlin.behavior.TracerProviderBehavior
 import io.opentelemetry.kotlin.config.schema.model.AlwaysOffSampler
+import io.opentelemetry.kotlin.config.schema.model.ConsoleExporter
+import io.opentelemetry.kotlin.config.schema.model.LogRecordExporter
+import io.opentelemetry.kotlin.config.schema.model.LogRecordProcessor
+import io.opentelemetry.kotlin.config.schema.model.LoggerProvider
 import io.opentelemetry.kotlin.config.schema.model.OpenTelemetryConfiguration
 import io.opentelemetry.kotlin.config.schema.model.Sampler
+import io.opentelemetry.kotlin.config.schema.model.SimpleLogRecordProcessor
+import io.opentelemetry.kotlin.config.schema.model.SimpleSpanProcessor
+import io.opentelemetry.kotlin.config.schema.model.SpanExporter
 import io.opentelemetry.kotlin.config.schema.model.SpanLimits
+import io.opentelemetry.kotlin.config.schema.model.SpanProcessor
 import io.opentelemetry.kotlin.config.schema.model.TracerProvider
 import io.opentelemetry.kotlin.framework.loadTestFixture
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 internal class OpenTelemetryConfigurationMapperTest {
 
@@ -51,17 +63,47 @@ internal class OpenTelemetryConfigurationMapperTest {
 
     @Test
     fun leavesLimitsTheSpecDisallowsUnset() {
-        val config = OpenTelemetryConfiguration(
+        val behavior = OpenTelemetryConfiguration(
             fileFormat = FILE_FORMAT,
             tracerProvider = TracerProvider(
                 processors = emptyList(),
                 limits = SpanLimits(attributeCountLimit = -1),
             ),
+        ).toBehavior()
+
+        assertEquals(SpanLimitsBehavior(), behavior.tracerProvider?.spanLimits)
+        assertNull(behavior.tracerProvider?.processor)
+    }
+
+    @Test
+    fun mapsConsoleExportersOntoProcessorBehavior() {
+        val console = ConsoleExporterBehavior()
+        val config = OpenTelemetryConfiguration(
+            fileFormat = FILE_FORMAT,
+            tracerProvider = TracerProvider(
+                processors = listOf(
+                    SpanProcessor(simple = SimpleSpanProcessor(exporter = SpanExporter(console = ConsoleExporter()))),
+                ),
+            ),
+            loggerProvider = LoggerProvider(
+                processors = listOf(
+                    LogRecordProcessor(
+                        simple = SimpleLogRecordProcessor(exporter = LogRecordExporter(console = ConsoleExporter())),
+                    ),
+                ),
+            ),
         )
 
         assertEquals(
-            SpanLimitsBehavior(),
-            config.toBehavior().tracerProvider?.spanLimits,
+            OpenTelemetryBehavior(
+                tracerProvider = TracerProviderBehavior(
+                    processor = SpanProcessorBehavior(console = console),
+                ),
+                loggerProvider = LoggerProviderBehavior(
+                    processor = LogRecordProcessorBehavior(console = console),
+                ),
+            ),
+            config.toBehavior(),
         )
     }
 
