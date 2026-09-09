@@ -16,6 +16,8 @@ fun List<SpanProcessor>.toBehavior(): SpanProcessorBehavior? {
         processor.simple?.exporter?.console != null ||
             processor.batch?.exporter?.console != null
     }
-    if (!consoleSelected) return null
+    if (!consoleSelected) {
+        return null
+    }
     return SpanProcessorBehavior(console = ConsoleExporterBehavior())
 }
