@@ -1,11 +1,14 @@
 package io.opentelemetry.kotlin.config.envar
 
 import io.opentelemetry.kotlin.behavior.AttributeLimitsBehavior
+import io.opentelemetry.kotlin.behavior.ConsoleExporterBehavior
 import io.opentelemetry.kotlin.behavior.LogLimitsBehavior
+import io.opentelemetry.kotlin.behavior.LogRecordProcessorBehavior
 import io.opentelemetry.kotlin.behavior.LoggerProviderBehavior
 import io.opentelemetry.kotlin.behavior.OpenTelemetryBehavior
 import io.opentelemetry.kotlin.behavior.SamplerBehavior
 import io.opentelemetry.kotlin.behavior.SpanLimitsBehavior
+import io.opentelemetry.kotlin.behavior.SpanProcessorBehavior
 import io.opentelemetry.kotlin.behavior.TracerProviderBehavior
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -104,6 +107,25 @@ internal class OpenTelemetryEnvVarsTest {
     @Test
     fun `should leave sampler unset when OTEL_TRACES_SAMPLER is unset`() {
         assertEquals(null, toBehavior { null }.tracerProvider?.sampler)
+    }
+
+    @Test
+    fun `should map console exporter env vars onto processor behavior`() {
+        val env = mapOf(
+            "OTEL_TRACES_EXPORTER" to "console",
+            "OTEL_LOGS_EXPORTER" to "console",
+        )
+        val behavior = toBehavior(env::get)
+        val console = ConsoleExporterBehavior()
+        assertEquals(SpanProcessorBehavior(console = console), behavior.tracerProvider?.processor)
+        assertEquals(LogRecordProcessorBehavior(console = console), behavior.loggerProvider?.processor)
+    }
+
+    @Test
+    fun `should leave processor unset when exporter env vars are unset`() {
+        val behavior = toBehavior { null }
+        assertEquals(null, behavior.tracerProvider?.processor)
+        assertEquals(null, behavior.loggerProvider?.processor)
     }
 
     private fun behaviorFrom(vars: Map<String, String>) =
