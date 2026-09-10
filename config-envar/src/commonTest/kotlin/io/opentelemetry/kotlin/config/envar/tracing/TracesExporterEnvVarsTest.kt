@@ -24,21 +24,25 @@ internal class TracesExporterEnvVarsTest {
 
     @Test
     fun `should leave known non-console exporters unset`() {
-        listOf("otlp", "zipkin", "logging", "none", "otlp/stdout", "").forEach { name ->
+        listOf("otlp", "logging", "none", "otlp/stdout", "").forEach { name ->
             assertNull(toBehavior(env(name)), "<$name> should not configure a processor")
         }
     }
 
     @Test
     fun `should leave unknown exporter unset`() {
-        assertNull(toBehavior(env("not_an_exporter")))
+        listOf("not_an_exporter", "zipkin").forEach { name ->
+            assertNull(toBehavior(env(name)), "<$name> should not configure a processor")
+        }
     }
 
     @Test
     fun `should warn on unknown exporter`() {
-        val warnings = mutableListOf<String>()
-        TracesExporterEnvVars(EnvVarReader(env("not_an_exporter")), warnings::add).toBehavior()
-        assertEquals(1, warnings.size)
+        listOf("not_an_exporter", "zipkin").forEach { name ->
+            val warnings = mutableListOf<String>()
+            TracesExporterEnvVars(EnvVarReader(env(name)), warnings::add).toBehavior()
+            assertEquals(1, warnings.size, "<$name> should warn")
+        }
     }
 
     @Test

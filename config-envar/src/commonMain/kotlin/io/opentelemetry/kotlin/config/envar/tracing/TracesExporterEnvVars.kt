@@ -20,7 +20,7 @@ class TracesExporterEnvVars(
         val name = reader.readString(EXPORTER)?.takeIf { it.isNotEmpty() } ?: return null
         return when (name.lowercase()) {
             CONSOLE -> SpanProcessorBehavior(console = ConsoleExporterBehavior())
-            OTLP, ZIPKIN, LOGGING, NONE, OTLP_STDOUT -> null
+            OTLP, LOGGING, NONE, OTLP_STDOUT -> null
             else -> null.also { onWarning("Unknown OTEL_TRACES_EXPORTER value '$name'; ignoring") }
         }
     }
@@ -29,7 +29,6 @@ class TracesExporterEnvVars(
         const val EXPORTER = "OTEL_TRACES_EXPORTER"
         const val CONSOLE = "console"
         const val OTLP = "otlp"
-        const val ZIPKIN = "zipkin"
         const val LOGGING = "logging"
         const val NONE = "none"
         const val OTLP_STDOUT = "otlp/stdout"
