@@ -3,8 +3,10 @@ package io.opentelemetry.kotlin.init
 import io.opentelemetry.kotlin.Clock
 import io.opentelemetry.kotlin.behavior.AttributeLimitsBehavior
 import io.opentelemetry.kotlin.behavior.LogLimitsBehavior
+import io.opentelemetry.kotlin.behavior.LogRecordProcessorBehavior
 import io.opentelemetry.kotlin.behavior.OpenTelemetryBehavior
 import io.opentelemetry.kotlin.behavior.SpanLimitsBehavior
+import io.opentelemetry.kotlin.behavior.SpanProcessorBehavior
 import io.opentelemetry.kotlin.config.dsl.AttributeLimitsConfigDslImpl
 import io.opentelemetry.kotlin.error.GuardedSdkErrorHandler
 import io.opentelemetry.kotlin.error.NoopSdkErrorHandler
@@ -115,11 +117,27 @@ internal class OpenTelemetryConfigImpl(
     private fun resolveLogLimits(): LogLimitsBehavior =
         resolvedBehavior.loggerProvider?.logLimits ?: LogLimitsBehavior()
 
+    private fun resolveSpanProcessor(): SpanProcessorBehavior? =
+        resolvedBehavior.tracerProvider?.processor
+
+    private fun resolveLogRecordProcessor(): LogRecordProcessorBehavior? =
+        resolvedBehavior.loggerProvider?.processor
+
     internal fun generateTracingConfig() =
-        tracingConfig.generateTracingConfig(baseResource, resolveAttributeLimits(), resolveSpanLimits())
+        tracingConfig.generateTracingConfig(
+            baseResource,
+            resolveAttributeLimits(),
+            resolveSpanLimits(),
+            resolveSpanProcessor(),
+        )
 
     internal fun generateLoggingConfig() =
-        loggingConfig.generateLoggingConfig(baseResource, resolveAttributeLimits(), resolveLogLimits())
+        loggingConfig.generateLoggingConfig(
+            baseResource,
+            resolveAttributeLimits(),
+            resolveLogLimits(),
+            resolveLogRecordProcessor(),
+        )
 
     internal fun generateMetricsConfig() =
         metricsConfig.generateMetricsConfig(baseResource)

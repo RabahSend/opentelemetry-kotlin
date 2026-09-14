@@ -2,10 +2,14 @@ package io.opentelemetry.kotlin
 
 import io.opentelemetry.kotlin.clock.FakeClock
 import io.opentelemetry.kotlin.init.OpenTelemetryConfigImpl
+import io.opentelemetry.kotlin.logging.export.FakeLogRecordProcessor
+import io.opentelemetry.kotlin.tracing.export.FakeSpanProcessor
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertSame
 
 internal class CreateOpenTelemetryConfigFileTest {
 
@@ -49,6 +53,28 @@ internal class CreateOpenTelemetryConfigFileTest {
         assertEquals(32, cfg.generateLoggingConfig().logLimits.attributeCountLimit)
     }
 
+    @Test
+    fun `a config file with console exporters installs processors`() {
+        val cfg = OpenTelemetryConfigImpl(FakeClock()).apply {
+            configFile(writeConfigFile(CONSOLE_CONFIG_FILE))
+        }
+        assertNotNull(cfg.generateTracingConfig().processor)
+        assertNotNull(cfg.generateLoggingConfig().processor)
+    }
+
+    @Test
+    fun `the dsl export takes precedence over console in the config file`() {
+        val spanProcessor = FakeSpanProcessor()
+        val logProcessor = FakeLogRecordProcessor()
+        val cfg = OpenTelemetryConfigImpl(FakeClock()).apply {
+            configFile(writeConfigFile(CONSOLE_CONFIG_FILE))
+            tracerProvider { export { spanProcessor } }
+            loggerProvider { export { logProcessor } }
+        }
+        assertSame(spanProcessor, cfg.generateTracingConfig().processor)
+        assertSame(logProcessor, cfg.generateLoggingConfig().processor)
+    }
+
     private fun writeConfigFile(contents: String): String {
         val file = File.createTempFile("opentelemetry-config", ".yaml")
         file.deleteOnExit()
@@ -61,6 +87,20 @@ internal class CreateOpenTelemetryConfigFileTest {
             file_format: "1.0"
             attribute_limits:
               attribute_count_limit: 64
+        """.trimIndent()
+
+        val CONSOLE_CONFIG_FILE = """
+            file_format: "1.0"
+            tracer_provider:
+              processors:
+                - simple:
+                    exporter:
+                      console: {}
+            logger_provider:
+              processors:
+                - simple:
+                    exporter:
+                      console: {}
         """.trimIndent()
     }
 }

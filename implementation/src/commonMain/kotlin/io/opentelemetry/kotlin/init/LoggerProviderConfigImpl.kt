@@ -3,6 +3,7 @@ package io.opentelemetry.kotlin.init
 import io.opentelemetry.kotlin.Clock
 import io.opentelemetry.kotlin.behavior.AttributeLimitsBehavior
 import io.opentelemetry.kotlin.behavior.LogLimitsBehavior
+import io.opentelemetry.kotlin.behavior.LogRecordProcessorBehavior
 import io.opentelemetry.kotlin.behavior.LoggerProviderBehavior
 import io.opentelemetry.kotlin.config.dsl.LogLimitsConfigDslImpl
 import io.opentelemetry.kotlin.error.SdkError
@@ -13,6 +14,8 @@ import io.opentelemetry.kotlin.init.config.LoggingConfig
 import io.opentelemetry.kotlin.logging.LoggerConfigImpl
 import io.opentelemetry.kotlin.logging.LoggerConfigurator
 import io.opentelemetry.kotlin.logging.export.LogRecordProcessor
+import io.opentelemetry.kotlin.logging.export.simpleLogRecordProcessor
+import io.opentelemetry.kotlin.logging.export.stdoutLogRecordExporter
 import io.opentelemetry.kotlin.resource.Resource
 
 internal class LoggerProviderConfigImpl(
@@ -54,8 +57,9 @@ internal class LoggerProviderConfigImpl(
         base: Resource,
         globalLimits: AttributeLimitsBehavior,
         logLimits: LogLimitsBehavior,
+        processorBehavior: LogRecordProcessorBehavior? = null,
     ): LoggingConfig = LoggingConfig(
-        processor = processor,
+        processor = processor ?: processorFromConsole(processorBehavior),
         logLimits = generateLogLimitsConfig(globalLimits, logLimits),
         resource = base.merge(resourceConfigImpl.generateResource()),
         sdkErrorHandler = sdkErrorHandler,
@@ -66,6 +70,15 @@ internal class LoggerProviderConfigImpl(
         LoggerProviderBehavior(
             logLimits = logLimits.toBehavior()
         )
+
+    private fun processorFromConsole(processorBehavior: LogRecordProcessorBehavior?): LogRecordProcessor? {
+        if (processorBehavior?.console == null) {
+            return null
+        }
+        return LogExportConfigImpl(clock, sdkErrorHandler).run {
+            simpleLogRecordProcessor(stdoutLogRecordExporter())
+        }
+    }
 
     /**
      * A limit left unset by the log limits falls back to the global attribute limits, then to the

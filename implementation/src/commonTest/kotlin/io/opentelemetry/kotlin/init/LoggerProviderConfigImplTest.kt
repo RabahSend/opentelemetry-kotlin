@@ -2,7 +2,9 @@ package io.opentelemetry.kotlin.init
 
 import io.opentelemetry.kotlin.attributes.DEFAULT_ATTRIBUTE_LIMIT
 import io.opentelemetry.kotlin.behavior.AttributeLimitsBehavior
+import io.opentelemetry.kotlin.behavior.ConsoleExporterBehavior
 import io.opentelemetry.kotlin.behavior.LogLimitsBehavior
+import io.opentelemetry.kotlin.behavior.LogRecordProcessorBehavior
 import io.opentelemetry.kotlin.clock.FakeClock
 import io.opentelemetry.kotlin.error.FakeSdkErrorHandler
 import io.opentelemetry.kotlin.error.NoopSdkErrorHandler
@@ -40,6 +42,31 @@ internal class LoggerProviderConfigImplTest {
             assertNull(attributeCountLimit)
             assertNull(attributeValueLengthLimit)
         }
+    }
+
+    @Test
+    fun testConsoleBehaviorInstallsProcessor() {
+        val cfg = LoggerProviderConfigImpl(clock, NoopSdkErrorHandler).generateLoggingConfig(
+            base,
+            noGlobalLimits,
+            noLogLimits,
+            LogRecordProcessorBehavior(console = ConsoleExporterBehavior()),
+        )
+        assertNotNull(cfg.processor)
+    }
+
+    @Test
+    fun testDslExportTakesPrecedenceOverConsoleBehavior() {
+        val dslProcessor = FakeLogRecordProcessor()
+        val cfg = LoggerProviderConfigImpl(clock, NoopSdkErrorHandler).apply {
+            export { dslProcessor }
+        }.generateLoggingConfig(
+            base,
+            noGlobalLimits,
+            noLogLimits,
+            LogRecordProcessorBehavior(console = ConsoleExporterBehavior()),
+        )
+        assertSame(dslProcessor, cfg.processor)
     }
 
     @Test
