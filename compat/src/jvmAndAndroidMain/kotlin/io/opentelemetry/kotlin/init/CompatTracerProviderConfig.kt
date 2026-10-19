@@ -109,15 +109,16 @@ internal class CompatTracerProviderConfig(
         }
         exportConfigured = true
         val exporter = LoggingSpanExporter.create()
-        if (batch == null) {
-            builder.addSpanProcessor(OtelJavaSimpleSpanProcessor.create(exporter))
-        } else {
+        // An explicit simple processor wins when batch settings were merged from a lower layer.
+        if (batch != null && simple == null) {
             val batchBuilder = OtelJavaBatchSpanProcessor.builder(exporter)
             batch.scheduleDelay?.let { batchBuilder.setScheduleDelay(it, TimeUnit.MILLISECONDS) }
             batch.exportTimeout?.let { batchBuilder.setExporterTimeout(it, TimeUnit.MILLISECONDS) }
             batch.maxQueueSize?.let { batchBuilder.setMaxQueueSize(it) }
             batch.maxExportBatchSize?.let { batchBuilder.setMaxExportBatchSize(it) }
             builder.addSpanProcessor(batchBuilder.build())
+        } else {
+            builder.addSpanProcessor(OtelJavaSimpleSpanProcessor.create(exporter))
         }
     }
 
