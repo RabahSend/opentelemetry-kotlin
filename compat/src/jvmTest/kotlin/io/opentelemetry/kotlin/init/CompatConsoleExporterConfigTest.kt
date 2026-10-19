@@ -9,11 +9,11 @@ import io.opentelemetry.kotlin.behavior.SimpleSpanProcessorBehavior
 import io.opentelemetry.kotlin.behavior.SpanExporterBehavior
 import io.opentelemetry.kotlin.behavior.SpanLimitsBehavior
 import io.opentelemetry.kotlin.behavior.SpanProcessorBehavior
-import io.opentelemetry.kotlin.tracing.TracerProviderAdapter
 import io.opentelemetry.kotlin.clock.FakeClock
 import io.opentelemetry.kotlin.error.NoopSdkErrorHandler
 import io.opentelemetry.kotlin.factory.CompatIdGenerator
 import io.opentelemetry.kotlin.logging.export.FakeLogRecordProcessor
+import io.opentelemetry.kotlin.tracing.TracerProviderAdapter
 import io.opentelemetry.kotlin.tracing.export.FakeSpanProcessor
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
